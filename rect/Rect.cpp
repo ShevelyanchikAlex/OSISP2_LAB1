@@ -9,10 +9,9 @@ Rect::Rect(int x, int y, int height, int width, double vx, double vy) {
     this->vy = vy;
 }
 
-Rect::Rect() {
-}
+Rect::Rect() {}
 
-void Rect::paintRect(HWND hwnd) const {
+void Rect::paint_rect(HWND hwnd) const {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     HBRUSH br = CreateSolidBrush(RGB(200, 50, 30));

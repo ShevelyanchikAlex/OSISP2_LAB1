@@ -1,6 +1,4 @@
 #include <windows.h>
-#include <tchar.h>
-
 #include "Window.h"
 
 
@@ -10,10 +8,10 @@ Window::Window(HWND hwnd, MSG msg, WNDCLASS wcl) {
     this->wcl = wcl;
 }
 
-bool Window::reg_window(HINSTANCE hinstance, LPCSTR lpszClassName, WNDPROC WndProc) {
+bool Window::reg_window(HINSTANCE hinstance, LPCSTR lpcstr, WNDPROC wndProc) {
     wcl.hInstance = hinstance;
-    wcl.lpszClassName = lpszClassName;
-    wcl.lpfnWndProc = WndProc;
+    wcl.lpszClassName = lpcstr;
+    wcl.lpfnWndProc = wndProc;
     wcl.style = CS_HREDRAW;
     wcl.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
     wcl.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -21,7 +19,7 @@ bool Window::reg_window(HINSTANCE hinstance, LPCSTR lpszClassName, WNDPROC WndPr
     wcl.cbClsExtra = 0;
     wcl.cbWndExtra = 0;
     wcl.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
-    if (!RegisterClass(&wcl)) return 0;
+    if (!RegisterClass(&wcl)) return false;
 }
 
 void Window::create_window(HINSTANCE hinstance) {

@@ -1,1 +1,0 @@
-#define IDB_BITMAP2                     132

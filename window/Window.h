@@ -3,16 +3,15 @@
 #ifndef OSISP_LAB1_WINDOW_H
 #define OSISP_LAB1_WINDOW_H
 
-
 class Window {
 public:
-    HWND hwnd;// Дескриптор главного окна
+    HWND hwnd;
     MSG msg{};
     WNDCLASS wcl{};
 
     Window(HWND hwnd, MSG msg, WNDCLASS wcl);
 
-    bool reg_window(HINSTANCE hinstance, LPCSTR lpszClassName, WNDPROC WndProc);
+    bool reg_window(HINSTANCE hinstance, LPCSTR lpcstr, WNDPROC wndProc);
 
     void create_window(HINSTANCE hinstance);
 
