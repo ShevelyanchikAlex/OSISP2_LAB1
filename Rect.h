@@ -1,5 +1,5 @@
-#ifndef PROJ1_RECT_H
-#define PROJ1_RECT_H
+#ifndef OSISP_LAB1_RECT_H
+#define OSISP_LAB1_RECT_H
 
 
 #include <windows.h>
@@ -19,4 +19,4 @@ public:
 };
 
 
-#endif //PROJ1_RECT_H
+#endif //OSISP_LAB1_RECT_H

@@ -1,7 +1,7 @@
 #include <windows.h>
 
-#ifndef PROJ1_WINDOW_H
-#define PROJ1_WINDOW_H
+#ifndef OSISP_LAB1_WINDOW_H
+#define OSISP_LAB1_WINDOW_H
 
 
 class Window {
@@ -20,4 +20,4 @@ public:
 };
 
 
-#endif //PROJ1_WINDOW_H
+#endif //OSISP_LAB1_WINDOW_H

@@ -53,7 +53,7 @@ int WinMain(HINSTANCE hinstance, // Дескриптор текущего при
             break;
             case WM_KEYDOWN:
                 switch (wParam) {
-                    case VK_LEFT:
+                                case VK_LEFT:
                         case 0x41:
                             r.x -= (int) (r.vx * RECT_DELTA_SPEED);
                             break;
