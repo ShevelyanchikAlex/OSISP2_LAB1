@@ -15,7 +15,7 @@ public:
 
     Rect();
 
-    void paint_rect(HWND hwnd) const;
+    void paint_rect(HWND &hwnd) const;
 };
 
 

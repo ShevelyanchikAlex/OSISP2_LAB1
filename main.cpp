@@ -5,29 +5,32 @@
 #include "const.h"
 
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-void create_combobox(HWND hwnd);
-
-void mousewheel_handling(WPARAM wParam);
-
-void keydown_handling(WPARAM wparam);
-
-void auto_mode_handling(HWND hwnd);
-
+RECT windowSpace;
 Rect rect;
 byte selected_mode = FIRST_MODE_VAL;
+PAINTSTRUCT ps;
+HDC memDC;
+HBITMAP bmp, memBmp, oldBitmap;
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+void create_mode_combobox(HWND &hwnd);
+void create_obj_combobox(HWND &hwnd);
+void handle_mousewheel(WPARAM &wParam);
+void handle_keydown(WPARAM &wparam, HWND &hwnd);
+void handle_auto_mode(HWND &hwnd);
+void check_zone_validation(HWND &hwnd);
+void load_image_bmp(HWND &hwnd);
+void draw_image(HDC &hdc);
+void paint_image(HWND &hwnd);
+int calc_offset(byte sign, int coord, int delta);
+void handle_wm_command(HWND &hwnd, WPARAM wParam, LPARAM lParam);
+
 
 int WinMain(HINSTANCE hinstance, HINSTANCE, LPTSTR, int mode) {
-    HWND hwnd = nullptr;
-    MSG msg;
-    WNDCLASS wcl;
-
-    Window window = Window(hwnd, msg, wcl);
+    Window window = Window();
     window.reg_window(hinstance, "Window", WndProc);
     window.create_window(hinstance);
     window.show_window();
-    UpdateWindow(hwnd);
 
     while (GetMessage(&window.msg, nullptr, 0, 0)) {
         TranslateMessage(&window.msg);
@@ -37,19 +40,20 @@ int WinMain(HINSTANCE hinstance, HINSTANCE, LPTSTR, int mode) {
 }
 
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    switch (message) {
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
         case WM_CREATE:
-            create_combobox(hwnd);
             rect = Rect(RECT_START_X, RECT_START_Y, RECT_HEIGHT, RECT_WIDTH, RECT_VX, RECT_VY);
+            create_mode_combobox(hwnd);
+            create_obj_combobox(hwnd);
             SetTimer(hwnd, 1, 25, nullptr);
             break;
         case WM_KEYDOWN:
-            keydown_handling(wParam);
+            handle_keydown(wParam, hwnd);
             break;
         case WM_MOUSEWHEEL:
             if (selected_mode == FIRST_MODE_VAL) {
-                mousewheel_handling(wParam);
+                handle_mousewheel(wParam);
             }
             break;
         case WM_MOUSEMOVE:
@@ -61,7 +65,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER: {
             InvalidateRect(hwnd, &rect.rect, true);
             if (selected_mode == THIRD_MODE_VAL) {
-                auto_mode_handling(hwnd);
+                handle_auto_mode(hwnd);
             }
             rect.rect.left = rect.x - rect.width - 1;
             rect.rect.top = rect.y - rect.height - 1;
@@ -71,51 +75,82 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
         }
             break;
         case WM_COMMAND:
-            if (LOWORD(wParam) == CB_ID) {
-                if (HIWORD(wParam) == CBN_SELCHANGE) {
-                    selected_mode = SendMessage((HWND) lParam, CB_GETCURSEL, 0, 0);
-                }
-            }
+            handle_wm_command(hwnd,wParam,lParam);
             break;
         case WM_PAINT:
-            rect.paint_rect(hwnd);
+            if (!bmp) {
+                rect.paint_rect(hwnd);
+            } else {
+                paint_image(hwnd);
+            }
+            UpdateWindow(hwnd);
             break;
         case WM_DESTROY:
             KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
 
-void create_combobox(HWND hwnd) {
-    HWND combo_box = CreateWindow("combobox", "", WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 0, 0, CB_WIDTH, CB_HEIGHT,
-                                  hwnd, (HMENU) CB_ID, nullptr, nullptr);
-    SendMessageA(combo_box, CB_ADDSTRING, 0, (LPARAM) FIRST_MODE);
-    SendMessageA(combo_box, CB_ADDSTRING, 0, (LPARAM) SECOND_MODE);
-    SendMessageA(combo_box, CB_ADDSTRING, 0, (LPARAM) THIRD_MODE);
-    SendMessageA(combo_box, CB_ADDSTRING, 0, (LPARAM) FOURTH_MODE);
-    SendMessage(combo_box, CB_SETCURSEL, 0, 0);
+
+void create_mode_combobox(HWND &hwnd) {
+    HWND mode_combo_box = CreateWindow("combobox", "", WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 0, 0, CB_MODE_WIDTH,
+                                       CB_MODE_HEIGHT, hwnd, (HMENU) CB_MODE_ID, nullptr, nullptr);
+    SendMessageA(mode_combo_box, CB_ADDSTRING, 0, (LPARAM) FIRST_MODE);
+    SendMessageA(mode_combo_box, CB_ADDSTRING, 0, (LPARAM) SECOND_MODE);
+    SendMessageA(mode_combo_box, CB_ADDSTRING, 0, (LPARAM) THIRD_MODE);
+    SendMessage(mode_combo_box, CB_SETCURSEL, 0, 0);
+}
+
+void create_obj_combobox(HWND &hwnd) {
+    HWND obj_combo_box = CreateWindow("combobox", "", WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, CB_MODE_WIDTH, 0,
+                                      CB_OBJ_WIDTH,
+                                      CB_OBJ_HEIGHT, hwnd, (HMENU) CB_OBJ_ID, nullptr, nullptr);
+    SendMessageA(obj_combo_box, CB_ADDSTRING, 0, (LPARAM) FIRST_OBJ);
+    SendMessageA(obj_combo_box, CB_ADDSTRING, 0, (LPARAM) SECOND_OBJ);
+    SendMessage(obj_combo_box, CB_SETCURSEL, 0, 0);
+}
+
+void handle_wm_command(HWND &hwnd, WPARAM wParam, LPARAM lParam){
+    switch (LOWORD(wParam)) {
+        case CB_MODE_ID:
+            if (HIWORD(wParam) == CBN_SELCHANGE) {
+                selected_mode = SendMessage((HWND) lParam, CB_GETCURSEL, 0, 0);
+            }
+            break;
+            case CB_OBJ_ID:
+                if (HIWORD(wParam) == CBN_SELCHANGE) {
+                    if (!bmp) {
+                        load_image_bmp(hwnd);
+                    } else {
+                        bmp = nullptr;
+                    }
+                }
+                break;
+    }
 }
 
 
-void auto_mode_handling(HWND hwnd) {
+void handle_auto_mode(HWND &hwnd) {
     rect.x += (int) rect.vx;
     rect.y += (int) rect.vy;
 
-    RECT rt;
-    GetClientRect(hwnd, &rt);
-    int right_wall = rt.right;
-    int bottom_wall = rt.bottom;
-    if (rect.x >= right_wall - rect.width) rect.vx = -std::abs(rect.vx);
-    if (rect.y > bottom_wall - rect.height) rect.vy = -std::abs(rect.vy);
+    check_zone_validation(hwnd);
+    UpdateWindow(hwnd);
+}
+
+void check_zone_validation(HWND &hwnd) {
+    GetClientRect(hwnd, &windowSpace);
+    if (rect.x >= windowSpace.right - rect.width) rect.vx = -std::abs(rect.vx);
+    if (rect.y > windowSpace.bottom - rect.height) rect.vy = -std::abs(rect.vy);
     if (rect.x < 0) rect.vx = std::abs(rect.vx);
     if (rect.y < 0) rect.vy = std::abs(rect.vy);
 }
 
-void keydown_handling(WPARAM wparam) {
+void handle_keydown(WPARAM &wparam, HWND &hwnd) {
     switch (wparam) {
         case VK_LEFT:
         case 0x41:
@@ -139,21 +174,66 @@ void keydown_handling(WPARAM wparam) {
 }
 
 
-void mousewheel_handling(WPARAM wParam) {
+void handle_mousewheel(WPARAM &wParam) {
     byte sign = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? 1 : -1;
     int delta = GET_WHEEL_DELTA_WPARAM(wParam) / 10;
 
     if (LOWORD(wParam) == MK_SHIFT) {
-        if (sign > 0) {
-            rect.x -= delta;
-        } else {
-            rect.x += delta;
-        }
+        rect.x = calc_offset(sign, rect.x, delta);
     } else {
-        if (sign > 0) {
-            rect.y -= delta;
-        } else {
-            rect.y += delta;
-        }
+        rect.y = calc_offset(sign, rect.y, delta);
     }
 }
+
+int calc_offset(byte sign, int coord, int delta) {
+    return sign > 0 ? coord -= delta : coord += delta;
+}
+
+void load_image_bmp(HWND &hwnd) {
+    if ((bmp = (HBITMAP) LoadImage(nullptr, "D:/study/5SEM/OSISP/OSISP_LAB1/assets/images/image.bmp", IMAGE_BITMAP, 0,
+                                   0, LR_LOADFROMFILE)) == nullptr) {
+        MessageBox(nullptr, "Error", "Error to loading image!", MB_OK);
+    } else {
+        BITMAP bitmap;
+        GetObject(bmp, sizeof(bitmap), &bitmap);
+        UpdateWindow(hwnd);
+        CoUninitialize();
+    }
+}
+
+void paint_image(HWND &hwnd) {
+    GetClientRect(hwnd, &windowSpace);
+    HDC hdc;
+    hdc = BeginPaint(hwnd, &ps);
+    memDC = CreateCompatibleDC(hdc);
+    memBmp = CreateCompatibleBitmap(hdc, windowSpace.right - windowSpace.left,
+                                    windowSpace.bottom - windowSpace.top);
+    oldBitmap = (HBITMAP) SelectObject(memDC, memBmp);
+    FillRect(memDC, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW + 1));
+    draw_image(memDC);
+    BitBlt(hdc, windowSpace.left, windowSpace.top, windowSpace.right - windowSpace.left,
+           windowSpace.bottom - windowSpace.top, memDC,
+           windowSpace.left,
+           windowSpace.top, SRCCOPY);
+
+    DeleteDC(memDC);
+    DeleteObject(memBmp);
+    DeleteObject(oldBitmap);
+    EndPaint(hwnd, &ps);
+}
+
+void draw_image(HDC &hdc) {
+    HDC hdcMem;
+    BITMAP bitmap;
+    HGDIOBJ oldBitmap;
+
+    hdcMem = CreateCompatibleDC(hdc);
+    oldBitmap = SelectObject(hdcMem, bmp);
+
+    GetObject(bmp, sizeof(bitmap), &bitmap);
+    BitBlt(hdc, rect.x, rect.y, rect.width, rect.height, hdcMem, 0, 0, SRCCOPY);
+    SelectObject(hdcMem, oldBitmap);
+    DeleteDC(hdcMem);
+    DeleteObject(oldBitmap);
+}
+

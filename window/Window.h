@@ -11,6 +11,8 @@ public:
 
     Window(HWND hwnd, MSG msg, WNDCLASS wcl);
 
+    Window();
+
     bool reg_window(HINSTANCE hinstance, LPCSTR lpcstr, WNDPROC wndProc);
 
     void create_window(HINSTANCE hinstance);

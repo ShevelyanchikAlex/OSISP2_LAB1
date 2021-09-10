@@ -1,11 +1,18 @@
 #include <windows.h>
 #include "Window.h"
+#include "../const.h"
 
 
 Window::Window(HWND hwnd, MSG msg, WNDCLASS wcl) {
     this->hwnd = hwnd;
     this->msg = msg;
     this->wcl = wcl;
+}
+
+Window::Window() {
+    this->hwnd = HWND();
+    this->msg = MSG();
+    this->wcl = WNDCLASS();
 }
 
 bool Window::reg_window(HINSTANCE hinstance, LPCSTR lpcstr, WNDPROC wndProc) {
@@ -23,8 +30,8 @@ bool Window::reg_window(HINSTANCE hinstance, LPCSTR lpcstr, WNDPROC wndProc) {
 }
 
 void Window::create_window(HINSTANCE hinstance) {
-    hwnd = CreateWindow("Window", "Lab 1", WS_OVERLAPPEDWINDOW, 200, 200, 500, 450, HWND_DESKTOP, nullptr, hinstance,
-                        nullptr);
+    hwnd = CreateWindow("Window", "Lab 1", WS_OVERLAPPEDWINDOW, WINDOW_X_OFFSET, WINDOW_Y_OFFSET, WINDOW_WIDTH,
+                        WINDOW_HEIGHT, HWND_DESKTOP, nullptr, hinstance, nullptr);
 }
 
 void Window::show_window() const {
