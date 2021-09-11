@@ -33,7 +33,6 @@ const byte FIRST_OBJ_VAL = 0;
 const byte SECOND_OBJ_VAL = 1;
 
 
-
 //Rect val
 const int RECT_WIDTH = 150;
 const int RECT_HEIGHT = 153;

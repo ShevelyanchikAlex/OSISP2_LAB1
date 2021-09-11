@@ -24,6 +24,7 @@ void draw_image(HDC &hdc);
 void paint_image(HWND &hwnd);
 int calc_offset(byte sign, int coord, int delta);
 void handle_wm_command(HWND &hwnd, WPARAM wParam, LPARAM lParam);
+void track_coord();
 
 
 int WinMain(HINSTANCE hinstance, HINSTANCE, LPTSTR, int mode) {
@@ -67,10 +68,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (selected_mode == THIRD_MODE_VAL) {
                 handle_auto_mode(hwnd);
             }
-            rect.rect.left = rect.x - rect.width - 1;
-            rect.rect.top = rect.y - rect.height - 1;
-            rect.rect.right = rect.x + rect.width + 1;
-            rect.rect.bottom = rect.y + rect.height + 1;
+            track_coord();
             InvalidateRect(hwnd, &rect.rect, false);
         }
             break;
@@ -134,6 +132,14 @@ void handle_wm_command(HWND &hwnd, WPARAM wParam, LPARAM lParam){
 }
 
 
+
+void track_coord() {
+    rect.rect.left = rect.x - rect.width;
+    rect.rect.top = rect.y - rect.height;
+    rect.rect.right = rect.x + rect.width;
+    rect.rect.bottom = rect.y + rect.height;
+}
+
 void handle_auto_mode(HWND &hwnd) {
     rect.x += (int) rect.vx;
     rect.y += (int) rect.vy;
@@ -190,7 +196,8 @@ int calc_offset(byte sign, int coord, int delta) {
 }
 
 void load_image_bmp(HWND &hwnd) {
-    if ((bmp = (HBITMAP) LoadImage(nullptr, "D:/study/5SEM/OSISP/OSISP_LAB1/assets/images/image.bmp", IMAGE_BITMAP, 0,
+    if ((bmp = (HBITMAP) LoadImage(nullptr,
+     "C:/Users/aleksandrsevelancik/CLionProjects/OSISP2_LAB1/assets/images/image.bmp", IMAGE_BITMAP, 0,
                                    0, LR_LOADFROMFILE)) == nullptr) {
         MessageBox(nullptr, "Error", "Error to loading image!", MB_OK);
     } else {
