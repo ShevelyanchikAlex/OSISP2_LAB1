@@ -141,10 +141,9 @@ void track_coord() {
 }
 
 void handle_auto_mode(HWND &hwnd) {
+    check_zone_validation(hwnd);
     rect.x += (int) rect.vx;
     rect.y += (int) rect.vy;
-
-    check_zone_validation(hwnd);
     UpdateWindow(hwnd);
 }
 
@@ -197,8 +196,7 @@ int calc_offset(byte sign, int coord, int delta) {
 
 void load_image_bmp(HWND &hwnd) {
     if ((bmp = (HBITMAP) LoadImage(nullptr,
-     "C:/Users/aleksandrsevelancik/CLionProjects/OSISP2_LAB1/assets/images/image.bmp", IMAGE_BITMAP, 0,
-                                   0, LR_LOADFROMFILE)) == nullptr) {
+    PATH_IMAGE, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE)) == nullptr) {
         MessageBox(nullptr, "Error", "Error to loading image!", MB_OK);
     } else {
         BITMAP bitmap;
@@ -243,4 +241,3 @@ void draw_image(HDC &hdc) {
     DeleteDC(hdcMem);
     DeleteObject(oldBitmap);
 }
-

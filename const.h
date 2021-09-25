@@ -43,3 +43,6 @@ const int RECT_START_X = 100;
 const int RECT_START_Y = 100;
 
 const double RECT_DELTA_SPEED = 1.5;
+
+//image path
+#define PATH_IMAGE  "../assets/images/image.bmp"
